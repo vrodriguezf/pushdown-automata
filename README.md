@@ -27,5 +27,5 @@ When you have a file ready, run the script. It will prompt you for the input fil
 > * We agree that "e" means epsilon and will not show up as state symbol.
 > * You shouldn't use stack symbols that are longer than one character anything else is fine.
 
-### Issues
+## Issues
 This was put together rather quickly, so it would benefit from more edge case tests or tests in general.
