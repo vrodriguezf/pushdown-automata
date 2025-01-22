@@ -1,8 +1,9 @@
-### What is this?
-Description says it all.
+A simple python implementation of non-deterministic pushdown automata (PDA).
 
-### How to use?
+## Usage
+
 First you need create a automata file where you define your productions, start states and stuff like that.
+
 ```python
 Q P F # total states
 a # input word symbols
@@ -20,11 +21,11 @@ P a Y P e
 P e Z F e
 ```
 
-**notes:**
-* We agree that "e" means epsilon and will not show up as state symbol.
-* You shouldn't use stack symbols that are longer than one character anything else is fine.
+When you have a file ready, run the script. It will prompt you for the input file location and then ask for words to test. Enjoy!
 
-Thats it! Just run the script and it should ask for input file location and words to test. Have fun!
+> [!NOTE]
+> * We agree that "e" means epsilon and will not show up as state symbol.
+> * You shouldn't use stack symbols that are longer than one character anything else is fine.
 
 ### Issues
-This was a rush thing. It could really use some more edge case tests or tests in general.
+This was put together rather quickly, so it would benefit from more edge case tests or tests in general.
