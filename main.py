@@ -1,10 +1,12 @@
 #!/usr/bin/python
 import os
+import sys
+import pandas as pd
+from tabulate import tabulate
 
 start_input = "" # input word to be found or not found
 found = 0 # stores found state
 accepted_config = [] # here we will post end configuration that was accepted
-
 
 # production rules ("read input", "pop stack", "push stack", "next state")
 productions = {}
@@ -30,16 +32,14 @@ acceptable_states = []
 # E - accept on empty stack or F - acceptable state (default is false)
 accept_with = ""
 
-
-
-# rcursively generate all prossiblity tree and terminate on success
+# recursively generate all possibility tree and terminate on success
 def generate(state, input, stack, config):
 	global productions
 	global found
 
 	total = 0
 
-	# check for other tree node sucess
+	# check for other tree node success
 	if found:
 		return 0
 
@@ -60,9 +60,8 @@ def generate(state, input, stack, config):
 	# for each move do a tree
 	for i in moves:
 		total = total + generate(i[0], i[1], i[2], config + [(i[0], i[1], i[2])])  
-
+  
 	return total
-
 
 # checks if symbol is terminal or non-terminal
 def get_moves(state, input, stack, config):
@@ -71,12 +70,10 @@ def get_moves(state, input, stack, config):
 	moves = []
 
 	for i in productions:
-
 		if i != state:
 			continue
 
 		for j in productions[i]:
-			# print j
 			current = j
 			new = []
 
@@ -88,7 +85,7 @@ def get_moves(state, input, stack, config):
 					new.append(input[1:])
 				else:
 					continue
-			else:			
+			else:            
 				new.append(input)
 
 			# read stack symbol
@@ -98,12 +95,11 @@ def get_moves(state, input, stack, config):
 				else:
 					continue
 			else:
-				new.append(current[2] + append)
+				new.append(current[2] + stack)
 
 			moves.append(new)
 
 	return moves
-
 
 # checks if word already was generated somewhere in past
 def is_found(state, input, stack):
@@ -118,22 +114,17 @@ def is_found(state, input, stack):
 	if accept_with == "E":
 		if len(stack) < 1:  # accept if stack is empty
 			return 1
-
 		return 0
-
 	else:
 		for i in acceptable_states:
 			if i == state: # accept if we are in terminal state
 				return 1
-
 		return 0
 
-
-# print list of corrent configuration
+# print list of current configuration
 def print_config(config):
 	for i in config:
-		print i 
-
+		print(i)
 
 def parse_file(filename):
 	global productions
@@ -166,52 +157,70 @@ def parse_file(filename):
 
 		configuration = [(production[1], production[2], production[4], production[3])]
 
-		if not production[0] in productions.keys(): 
+		if production[0] not in productions.keys(): 
 			productions[production[0]] = []
 
 		configuration = [tuple(s if s != "e" else "" for s in tup) for tup in configuration]
 
 		productions[production[0]].extend(configuration)
 
-	print productions
-	print start_symbol
-	print start_stack
-	print acceptable_states
-	print accept_with
+	print(productions)
+	print(start_symbol)
+	print(start_stack)
+	print(acceptable_states)
+	print(accept_with)
 
 	return 1
-
 
 # checks if symbol is terminal or non-terminal
 def done():
 	if found:
-		print "Hurray! Input word \"" + start_input + "\" is part of grammar." 
+		print(f"Hurray! Input word \"{start_input}\" is part of grammar.") 
 	else:
-		print "Sorry! Input word \"" + start_input + "\" is not part of grammar." 
+		print(f"Sorry! Input word \"{start_input}\" is not part of grammar.") 
 
+def main(automata_file, positive_test_file, negative_test_file):
+	global start_input
+	global found
+	global accepted_config
 
+	if not parse_file(automata_file):
+		print("File not found!")
+		return
 
-# UI
-# here it should read automata in from file
-filename = raw_input("Please enter your automata file:\n")
-while not parse_file(filename):
-	print "File not found!"
-	filename = raw_input("Please enter your automata file again:\n")
-print "Automata built."
+	print("Automata built.")
 
-start_input = raw_input("Please enter your word:\n")
-print "Checking word \"" + start_input + "\" ..."
+	# Process positive tests
+	with open(positive_test_file, 'r') as pos_file:
+		positive_tests = [line.strip() for line in pos_file]
+	p_strings_for_show = {"String": [], "Is Accepted": []}
+	for test in positive_tests:
+		start_input = test
+		found = 0
+		accepted_config = []
+		generate(start_symbol, start_input, start_stack, 
+							[(start_symbol, start_input, start_stack)])
+		p_strings_for_show["String"].append(start_input)
+		p_strings_for_show["Is Accepted"].append(bool(found))
+	p_strings_df = pd.DataFrame(p_strings_for_show)
+	print(f"\nPositive Tests:\n{tabulate(p_strings_df, headers='keys', tablefmt='fancy_grid')}")
 
-while start_input != "end":
-	# magic starts here
-	if not generate(start_symbol, start_input, start_stack, [(start_symbol, start_input, start_stack)]):
-		done()
+	# Process negative tests
+	with open(negative_test_file, 'r') as neg_file:
+		negative_tests = [line.strip() for line in neg_file]
+	n_strings_for_show = {"String": [], "Is Rejected": []}
+	for test in negative_tests:
+		start_input = test
+		found = 0
+		accepted_config = []
+		generate(start_symbol, start_input, start_stack, [(start_symbol, start_input, start_stack)])
+		n_strings_for_show["String"].append(start_input)
+		n_strings_for_show["Is Rejected"].append(not found)
+	n_strings_df = pd.DataFrame(n_strings_for_show)
+	print(f"\nNegative Tests:\n{tabulate(n_strings_df, headers='keys', tablefmt='fancy_grid')}")
+
+if __name__ == "__main__":
+	if len(sys.argv) != 4:
+		print("Usage: main.py <automata_file> <positive_test_file> <negative_test_file>")
 	else:
-		print_config(accepted_config) # show list of configurations to acceptance
-		done()
-
-	start_input = raw_input("Enter your next word (or end):\n")
-	print "Checking word \"" + start_input + "\" ..."
-
-	
-
+		main(sys.argv[1], sys.argv[2], sys.argv[3])
