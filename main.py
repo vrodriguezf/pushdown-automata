@@ -33,15 +33,24 @@ acceptable_states = []
 accept_with = ""
 
 # recursively generate all possibility tree and terminate on success
-def generate(state, input, stack, config):
+def generate(state, input, stack, config, visited=None):
 	global productions
 	global found
+
+	if visited is None:
+		visited = set()
 
 	total = 0
 
 	# check for other tree node success
 	if found:
 		return 0
+
+	# check for repeated configuration to avoid infinite recursion
+	config_tuple = (state, input, stack)
+	if config_tuple in visited:
+		return 0
+	visited.add(config_tuple)
 
 	# check if our node can terminate with success
 	if is_found(state, input, stack):
@@ -59,7 +68,7 @@ def generate(state, input, stack, config):
 
 	# for each move do a tree
 	for i in moves:
-		total = total + generate(i[0], i[1], i[2], config + [(i[0], i[1], i[2])])  
+		total = total + generate(i[0], i[1], i[2], config + [(i[0], i[1], i[2])], visited)  
   
 	return total
 
@@ -204,8 +213,12 @@ def main(automata_file, positive_test_file, negative_test_file):
 		start_input = test
 		found = 0
 		accepted_config = []
-		generate(start_symbol, start_input, start_stack, 
-							[(start_symbol, start_input, start_stack)])
+		try:
+			generate(start_symbol, start_input, start_stack, 
+								[(start_symbol, start_input, start_stack)])
+		except RecursionError:
+			print(f"RecursionError for input '{start_input}'. Marking as rejected.")
+			found = 0
 		p_strings_for_show["String"].append(start_input)
 		p_strings_for_show["Is Accepted"].append(bool(found))
 	p_strings_df = pd.DataFrame(p_strings_for_show)
@@ -219,7 +232,11 @@ def main(automata_file, positive_test_file, negative_test_file):
 		start_input = test
 		found = 0
 		accepted_config = []
-		generate(start_symbol, start_input, start_stack, [(start_symbol, start_input, start_stack)])
+		try:
+			generate(start_symbol, start_input, start_stack, [(start_symbol, start_input, start_stack)])
+		except RecursionError:
+			print(f"RecursionError for input '{start_input}'. Marking as rejected.")
+			found = 0
 		n_strings_for_show["String"].append(start_input)
 		n_strings_for_show["Is Rejected"].append(not found)
 	n_strings_df = pd.DataFrame(n_strings_for_show)
