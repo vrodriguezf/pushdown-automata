@@ -154,6 +154,12 @@ def parse_file(filename):
 	# add rules
 	for i in range(7, len(lines)):
 		production = lines[i].split()
+		if len(production) < 5:
+			print(f"Error: Malformed rule on line {i+1} of '{filename}':")
+			print(f"  {lines[i]}")
+			print("  (Expected at least 5 space-separated fields.)")
+			import sys
+			sys.exit(1)
 
 		configuration = [(production[1], production[2], production[4], production[3])]
 
