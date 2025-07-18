@@ -1,0 +1,9 @@
+$
+a$
+aa$
+abac$
+abacabac$
+abaca$
+aabac$
+abacaaabac$
+aaabac$

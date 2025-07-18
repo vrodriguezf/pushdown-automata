@@ -135,6 +135,50 @@ def print_config(config):
 	for i in config:
 		print(i)
 
+def check_determinism():
+	global productions
+	
+	conflicts = []
+	
+	for state in productions:
+		# Group transitions by (input_symbol, stack_symbol)
+		transition_groups = {}
+		
+		for transition in productions[state]:
+			input_sym, stack_sym, push_sym, next_state = transition
+			key = (input_sym, stack_sym)
+			
+			if key not in transition_groups:
+				transition_groups[key] = []
+			transition_groups[key].append(transition)
+		
+		# Check for multiple transitions with same (input, stack) key
+		for key, transitions in transition_groups.items():
+			if len(transitions) > 1:
+				input_sym, stack_sym = key
+				input_display = input_sym if input_sym else "ε"
+				stack_display = stack_sym if stack_sym else "ε"
+				conflicts.append(f"State {state}: Multiple transitions on ({input_display}, {stack_display})")
+				
+		# Check for epsilon transitions alongside input transitions
+		epsilon_stack_syms = set()
+		input_stack_syms = set()
+		
+		for key in transition_groups.keys():
+			input_sym, stack_sym = key
+			if input_sym == "":  # epsilon transition
+				epsilon_stack_syms.add(stack_sym)
+			else:
+				input_stack_syms.add(stack_sym)
+		
+		# If any stack symbol has both epsilon and input transitions
+		conflicting_stack_syms = epsilon_stack_syms.intersection(input_stack_syms)
+		for stack_sym in conflicting_stack_syms:
+			stack_display = stack_sym if stack_sym else "ε"
+			conflicts.append(f"State {state}: Both ε-transition and input transition with stack symbol '{stack_display}'")
+	
+	return len(conflicts) == 0, conflicts
+
 def parse_file(filename):
 	global productions
 	global start_symbol
@@ -204,6 +248,16 @@ def main(automata_file, positive_test_file, negative_test_file):
 		return
 
 	print("Automata built.")
+
+	# Check if PDA is deterministic
+	is_det, conflicts = check_determinism()
+	if is_det:
+		print("PDA Type: Deterministic")
+	else:
+		print("PDA Type: Nondeterministic")
+		print("Sources of nondeterminism:")
+		for conflict in conflicts:
+			print(f"  - {conflict}")
 
 	# Process positive tests
 	with open(positive_test_file, 'r') as pos_file:

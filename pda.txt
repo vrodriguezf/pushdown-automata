@@ -1,0 +1,25 @@
+q1 q2 q3 q4 q5 q6 q7 q8 q9 q10 q11
+a b c $
+# X
+q1
+#
+q5
+F
+q1 a # q2 X#
+q1 $ # q5 e
+q2 a X q3 e
+q2 $ X q4 e
+q2 b X q6 XX
+q3 a e q3 e
+q3 $ e q4 e
+q4 e # q5 e
+q6 a X q7 XX
+q6 a X q8 e
+q7 b X q6 XX
+q8 c X q9 e
+q9 $ # q5 e
+q9 a X q10 e
+q9 a # q11 #
+q10 c X q9 e
+q11 $ # q5 e
+q11 a e q11 e

@@ -1,0 +1,9 @@
+b$
+c$
+ab$
+ac$
+abaac$
+ba$
+ca$
+aab$
+aac$
